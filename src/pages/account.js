@@ -149,9 +149,12 @@ export async function renderAccount() {
 
       <!-- App Info -->
       <div style="text-align: center; margin-top: 40px; padding-bottom: 20px;">
-        <div style="font-size: 24px; margin-bottom: 8px;">💰</div>
+        <div style="margin-bottom: 8px; display: flex; justify-content: center;">
+          <img src="/logo-2.png" alt="Logo" style="width: 48px; height: 48px; object-fit: contain; border-radius: 8px;" />
+        </div>
         <div style="font-weight: 700; font-size: 16px;">Money Love Hers</div>
         <div style="color: var(--text-tertiary); font-size: 12px; margin-top: 4px;">Phiên bản 1.1.0 — Cloud Sync</div>
+        <div style="color: var(--accent-green); font-size: 12px; font-weight: 600; margin-top: 6px;">Made by Danny</div>
         <div style="color: var(--text-muted); font-size: 11px; margin-top: 8px;">Dữ liệu được bảo vệ 3 lớp: IndexedDB + localStorage + Cloud</div>
       </div>
     </div>
