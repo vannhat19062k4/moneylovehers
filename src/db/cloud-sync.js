@@ -116,7 +116,7 @@ export async function setupTables() {
 
 // ─── Full Sync: Push all local data to cloud ───
 export async function pushToCloud(localData) {
-  if (!supabase || !syncEnabled || isSyncing) return false;
+  if (!supabase || !syncEnabled || isSyncing) return { success: false, message: 'Cloud chưa được thiết lập hoặc đang bận' };
 
   isSyncing = true;
   updateSyncStatus('syncing', 'Đang đồng bộ lên cloud...');
@@ -174,12 +174,12 @@ export async function pushToCloud(localData) {
     isSyncing = false;
     updateSyncStatus('synced', 'Đã đồng bộ lên cloud ✅');
     console.log('✅ Data pushed to cloud');
-    return true;
+    return { success: true };
   } catch (err) {
     isSyncing = false;
     updateSyncStatus('error', 'Lỗi đồng bộ: ' + err.message);
     console.error('❌ Push to cloud error:', err);
-    return false;
+    return { success: false, message: err.message || 'Lỗi không xác định' };
   }
 }
 

@@ -174,10 +174,10 @@ export function setupAccountEvents() {
     showToast('Đang đồng bộ...', 'info');
     const data = await getAllData();
     const result = await pushToCloud(data);
-    if (result) {
+    if (result && result.success) {
       showToast('Đồng bộ thành công! ☁️✅');
     } else {
-      showToast('Lỗi đồng bộ. Kiểm tra lại kết nối.', 'error');
+      showToast('Lỗi: ' + (result?.message || 'Không xác định'), 'error');
     }
   });
 
@@ -187,10 +187,10 @@ export function setupAccountEvents() {
       showToast('Đang đẩy dữ liệu lên Cloud...', 'info');
       const data = await getAllData();
       const result = await pushToCloud(data);
-      if (result) {
+      if (result && result.success) {
         showToast('Đã đẩy dữ liệu lên Cloud! ☁️✅');
       } else {
-        showToast('Lỗi đẩy dữ liệu', 'error');
+        showToast('Lỗi: ' + (result?.message || 'Không xác định'), 'error');
       }
     }
   });
