@@ -30,7 +30,7 @@ export function openAddTransaction() {
         </div>
 
         <!-- Transaction Form -->
-        <div style="padding: 20px; flex: 1;">
+        <div style="padding: 20px; flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;">
           <div class="card-glass" style="padding: 16px;">
             <!-- Type Tabs -->
             <div class="tabs" style="margin-bottom: 20px;">
@@ -210,8 +210,8 @@ function openCategoryPicker(categories) {
   const subCats = categories.filter(c => c.parentId);
 
   const pickerHtml = `
-    <div class="modal-overlay" id="cat-picker-overlay"></div>
-    <div class="modal" id="cat-picker-modal">
+    <div class="modal-overlay" id="cat-picker-overlay" style="z-index: 1100;"></div>
+    <div class="modal" id="cat-picker-modal" style="z-index: 1101;">
       <div class="modal-handle"></div>
       <div class="modal-header">
         <button class="icon-btn" id="cat-picker-back">
@@ -223,7 +223,7 @@ function openCategoryPicker(categories) {
         </button>
       </div>
 
-      <div style="padding: 0 16px;">
+      <div style="padding: 0 16px; flex-shrink: 0;">
         <!-- Type tabs -->
         <div class="tabs" style="margin-bottom: 16px;">
           <button class="tab cat-type-tab ${currentType === 'expense' ? 'active' : ''}" data-cat-type="expense">Khoản chi</button>
@@ -260,7 +260,7 @@ function openCategoryPicker(categories) {
       </div>
 
       <!-- Search -->
-      <div class="search-input-wrapper" style="position: sticky; bottom: 0; margin: 0; border-radius: 0; background: var(--bg-secondary); border-top: 1px solid var(--border-subtle);">
+      <div class="search-input-wrapper" style="margin: 0; border-radius: 0; background: var(--bg-secondary); border-top: 1px solid var(--border-subtle); flex-shrink: 0; padding-bottom: calc(12px + env(safe-area-inset-bottom));">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" class="search-input" placeholder="Tìm kiếm" id="cat-search" />
       </div>
