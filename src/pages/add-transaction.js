@@ -116,11 +116,11 @@ export function openAddTransaction() {
       </div>
     `;
 
-    setupAddTxEvents(categories);
+    setupAddTxEvents(wallets, categories);
   });
 }
 
-function setupAddTxEvents(categories) {
+function setupAddTxEvents(wallets, categories) {
   // Cancel
   document.getElementById('add-tx-cancel')?.addEventListener('click', closeAddTransaction);
   document.getElementById('add-tx-overlay')?.addEventListener('click', closeAddTransaction);
@@ -154,6 +154,11 @@ function setupAddTxEvents(categories) {
   // Category selector
   document.getElementById('category-selector')?.addEventListener('click', () => {
     openCategoryPicker(categories);
+  });
+
+  // Wallet selector
+  document.getElementById('wallet-selector')?.addEventListener('click', () => {
+    openWalletPicker(wallets);
   });
 
   // Save
@@ -395,6 +400,67 @@ async function saveTransaction() {
   } catch (err) {
     console.error('Save error:', err);
     showToast('Lỗi khi lưu giao dịch', 'error');
+  }
+}
+
+function openWalletPicker(wallets) {
+  const pickerHtml = `
+    <div class="modal-overlay" id="wallet-picker-overlay" style="z-index: 1100;"></div>
+    <div class="modal" id="wallet-picker-modal" style="z-index: 1101;">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <button class="icon-btn" id="wallet-picker-back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <h2>Chọn ví</h2>
+        <div style="width: 40px;"></div>
+      </div>
+      <div class="modal-body stagger-children">
+        ${wallets.map(w => `
+          <div class="category-item wallet-item-select" data-wallet-id="${w.id}">
+            <div class="category-icon" style="background: ${w.color || '#F59E0B'}22;">${w.icon || '💵'}</div>
+            <div class="category-name">${w.name}</div>
+            ${w.id === selectedWalletId ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : ''}
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+
+  const extraModal = document.createElement('div');
+  extraModal.id = 'wallet-picker-container';
+  extraModal.innerHTML = pickerHtml;
+  document.body.appendChild(extraModal);
+
+  document.getElementById('wallet-picker-back')?.addEventListener('click', closeWalletPicker);
+  document.getElementById('wallet-picker-overlay')?.addEventListener('click', closeWalletPicker);
+
+  document.querySelectorAll('.wallet-item-select').forEach(item => {
+    item.addEventListener('click', () => {
+      const id = parseInt(item.dataset.walletId);
+      selectedWalletId = id;
+      const wallet = wallets.find(w => w.id === id);
+      if (wallet) {
+        const selector = document.getElementById('wallet-selector');
+        if (selector) {
+          selector.innerHTML = `
+            <span style="font-size: 20px;">${wallet.icon || '💵'}</span>
+            <span style="flex: 1; font-weight: 500;">${wallet.name || 'Tiền mặt'}</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+          `;
+        }
+      }
+      closeWalletPicker();
+    });
+  });
+}
+
+function closeWalletPicker() {
+  const container = document.getElementById('wallet-picker-container');
+  if (container) {
+    const modal = document.getElementById('wallet-picker-modal');
+    if (modal) modal.classList.add('closing');
+    setTimeout(() => container.remove(), 250);
   }
 }
 
