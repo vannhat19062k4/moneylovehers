@@ -13,6 +13,15 @@ import { getSession } from './db/cloud-sync.js';
 // ─── App Initialization ───
 async function initApp() {
   try {
+    // Check for OAuth errors in URL before anything else
+    const params = new URLSearchParams(window.location.search);
+    const errorParam = params.get('error_description') || params.get('error');
+    if (errorParam) {
+      alert('Lỗi xác thực từ Server: ' + decodeURIComponent(errorParam).replace(/\+/g, ' '));
+      // Xoá error khỏi URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     await initDatabase();
     console.log('✅ Database initialized');
 
