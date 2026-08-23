@@ -216,12 +216,12 @@ export async function addTransaction(transaction) {
 
   // Update budget spent
   if (tx.type === 'expense') {
-    const now = new Date();
+    const txDate = new Date(tx.date);
     const budgets = await db.budgets.where('categoryId').equals(tx.categoryId).toArray();
     for (const budget of budgets) {
       const start = new Date(budget.startDate);
       const end = new Date(budget.endDate);
-      if (now >= start && now <= end) {
+      if (txDate >= start && txDate <= end) {
         await db.budgets.update(budget.id, {
           spent: (budget.spent || 0) + tx.amount
         });
@@ -283,6 +283,21 @@ export async function deleteTransaction(id) {
       await db.wallets.update(tx.walletId, {
         balance: (wallet.balance || 0) + balanceChange
       });
+    }
+
+    // Giảm budget spent khi xoá giao dịch
+    if (tx.type === 'expense') {
+      const txDate = new Date(tx.date);
+      const budgets = await db.budgets.where('categoryId').equals(tx.categoryId).toArray();
+      for (const budget of budgets) {
+        const start = new Date(budget.startDate);
+        const end = new Date(budget.endDate);
+        if (txDate >= start && txDate <= end) {
+          await db.budgets.update(budget.id, {
+            spent: Math.max(0, (budget.spent || 0) - tx.amount)
+          });
+        }
+      }
     }
   }
   const result = await db.transactions.delete(id);
