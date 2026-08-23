@@ -339,8 +339,11 @@ function openCategoryPicker(categories) {
 function bindCategoryItems() {
   document.querySelectorAll('#category-list .category-item').forEach(item => {
     item.addEventListener('click', () => {
-      const catId = parseInt(item.dataset.catId);
-      selectedCategoryId = catId;
+      const catIdStr = item.dataset.catId;
+      const category = categories.find(c => String(c.id) === catIdStr);
+      if (category) {
+        selectedCategoryId = category.id;
+      }
       const icon = item.querySelector('.category-icon')?.textContent.trim();
       const name = item.querySelector('.category-name')?.textContent.trim();
 
@@ -437,10 +440,10 @@ function openWalletPicker(wallets) {
 
   document.querySelectorAll('.wallet-item-select').forEach(item => {
     item.addEventListener('click', () => {
-      const id = parseInt(item.dataset.walletId);
-      selectedWalletId = id;
-      const wallet = wallets.find(w => w.id === id);
+      const idStr = item.dataset.walletId;
+      const wallet = wallets.find(w => String(w.id) === idStr);
       if (wallet) {
+        selectedWalletId = wallet.id;
         const selector = document.getElementById('wallet-selector');
         if (selector) {
           selector.innerHTML = `
