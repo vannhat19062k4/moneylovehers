@@ -7,8 +7,8 @@ const CONFIG_KEY = 'money_love_hers_supabase_config';
 const DEVICE_ID_KEY = 'money_love_hers_device_id';
 
 // Read from .env file
-const ENV_URL = import.meta.env?.VITE_SUPABASE_URL || '';
-const ENV_KEY = import.meta.env?.VITE_SUPABASE_ANON_KEY || '';
+const ENV_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const ENV_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 export let supabase = null;
 let syncEnabled = false;
