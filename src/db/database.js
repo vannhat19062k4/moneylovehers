@@ -194,11 +194,21 @@ export async function addTransaction(transaction) {
   const wallet = await db.wallets.get(tx.walletId);
   if (wallet) {
     let balanceChange = 0;
-    if (tx.type === 'expense' || tx.type === 'debt') {
-      balanceChange = -tx.amount;
-    } else if (tx.type === 'income') {
+    
+    if (tx.type === 'income') {
       balanceChange = tx.amount;
+    } else if (tx.type === 'expense') {
+      balanceChange = -tx.amount;
+    } else if (tx.type === 'debt') {
+      // Logic đặc biệt cho nhóm Nợ
+      const category = await db.categories.get(tx.categoryId);
+      if (category && (category.name === 'Thu nợ' || category.name === 'Đi vay')) {
+        balanceChange = tx.amount; // Tiền đi vào ví
+      } else {
+        balanceChange = -tx.amount; // Cho vay, Trả nợ: Tiền đi ra khỏi ví
+      }
     }
+    
     await db.wallets.update(tx.walletId, {
       balance: (wallet.balance || 0) + balanceChange
     });
@@ -256,11 +266,20 @@ export async function deleteTransaction(id) {
     const wallet = await db.wallets.get(tx.walletId);
     if (wallet) {
       let balanceChange = 0;
-      if (tx.type === 'expense' || tx.type === 'debt') {
-        balanceChange = tx.amount;
-      } else if (tx.type === 'income') {
-        balanceChange = -tx.amount;
+      
+      if (tx.type === 'income') {
+        balanceChange = -tx.amount; // Xoá thu nhập -> trừ tiền
+      } else if (tx.type === 'expense') {
+        balanceChange = tx.amount; // Xoá chi tiêu -> cộng lại tiền
+      } else if (tx.type === 'debt') {
+        const category = await db.categories.get(tx.categoryId);
+        if (category && (category.name === 'Thu nợ' || category.name === 'Đi vay')) {
+          balanceChange = -tx.amount; // Xoá khoản tiền vào -> trừ tiền
+        } else {
+          balanceChange = tx.amount; // Xoá khoản tiền ra -> cộng lại tiền
+        }
       }
+      
       await db.wallets.update(tx.walletId, {
         balance: (wallet.balance || 0) + balanceChange
       });
