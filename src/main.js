@@ -1,5 +1,5 @@
-import { initDatabase, getAllData } from './db/database.js';
-import { initSupabase, isSyncEnabled, pushToCloud } from './db/cloud-sync.js';
+import { initDatabase, getAllData, importData } from './db/database.js';
+import { initSupabase, isSyncEnabled, pushToCloud, pullFromCloud } from './db/cloud-sync.js';
 import { saveToLocalStorage } from './db/local-backup.js';
 import router from './router.js';
 import { renderDashboard, setupDashboardEvents } from './pages/dashboard.js';
@@ -33,9 +33,19 @@ async function initApp() {
           const session = await getSession();
           if (session) {
             const freshData = await getAllData();
-            await pushToCloud(freshData);
+            // If local DB is completely empty (new login), pull from cloud first!
+            if (freshData.wallets.length === 0 && freshData.categories.length === 0) {
+              const cloudData = await pullFromCloud();
+              if (cloudData) {
+                await importData({ data: cloudData });
+                window.dispatchEvent(new CustomEvent('reload-page')); // Refresh UI
+              }
+            } else {
+              // Otherwise, we push our local data to cloud (upsert)
+              await pushToCloud(freshData);
+            }
           }
-        }, 3000);
+        }, 1500);
       }
     } catch (err) {
       console.error('❌ Init error:', err);

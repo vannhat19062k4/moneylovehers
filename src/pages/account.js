@@ -176,8 +176,9 @@ export function setupAccountEvents() {
   });
 
   document.getElementById('btn-sign-out')?.addEventListener('click', async () => {
-    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+    if (confirm('Bạn có chắc chắn muốn đăng xuất? Dữ liệu trên thiết bị này sẽ bị xoá (nhưng vẫn an toàn trên Cloud).')) {
       await signOut();
+      await resetAllData();
       router.navigate('login');
     }
   });
