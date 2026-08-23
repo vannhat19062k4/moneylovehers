@@ -1,4 +1,4 @@
-import { getTransactions, getWallets, getCategories } from '../db/database.js';
+import { getTransactions, getWallets, getCategories, deleteTransaction } from '../db/database.js';
 import { formatFullCurrency, formatDate, getWeekRange, groupTransactionsByDay } from '../utils.js';
 
 let currentWeekOffset = 0;
@@ -120,6 +120,9 @@ export async function renderTransactions() {
                   <div class="transaction-amount ${isExpense ? 'text-amount-expense' : 'text-amount-income'}">
                     ${formatFullCurrency(tx.amount)}
                   </div>
+                  <button class="icon-btn delete-tx-btn" data-id="${tx.id}" style="margin-left: 8px; color: var(--accent-red); width: 28px; height: 28px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                  </button>
                 </div>
               `;
             }).join('')}
@@ -151,4 +154,15 @@ export function setupTransactionEvents() {
       window.dispatchEvent(new CustomEvent('reload-page'));
     });
   }
+
+  // Delete transaction events
+  document.querySelectorAll('.delete-tx-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const txId = parseInt(e.currentTarget.getAttribute('data-id'));
+      if (confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) {
+        await deleteTransaction(txId);
+        window.dispatchEvent(new CustomEvent('reload-page'));
+      }
+    });
+  });
 }
