@@ -418,6 +418,9 @@ export async function importData(jsonData) {
     if (parsed.data.categories) await db.categories.bulkAdd(parsed.data.categories);
     if (parsed.data.budgets) await db.budgets.bulkAdd(parsed.data.budgets);
   });
+
+  // Re-initialize default categories/wallet if the imported data was empty
+  await initDatabase();
 }
 
 export async function resetAllData() {
