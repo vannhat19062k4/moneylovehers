@@ -318,7 +318,7 @@ function openCategoryPicker(categories) {
             ` : ''}
           `;
         }).join('');
-        bindCategoryItems();
+        bindCategoryItems(categories);
       }
     });
   });
@@ -333,10 +333,10 @@ function openCategoryPicker(categories) {
     });
   });
 
-  bindCategoryItems();
+  bindCategoryItems(categories);
 }
 
-function bindCategoryItems() {
+function bindCategoryItems(categories) {
   document.querySelectorAll('#category-list .category-item').forEach(item => {
     item.addEventListener('click', () => {
       const catIdStr = item.dataset.catId;

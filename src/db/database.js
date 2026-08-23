@@ -239,7 +239,7 @@ export async function getTransactions(filters = {}) {
   let results = await collection.toArray();
 
   if (filters.walletId) {
-    results = results.filter(t => t.walletId === filters.walletId);
+    results = results.filter(t => String(t.walletId) === String(filters.walletId));
   }
   if (filters.type) {
     results = results.filter(t => t.type === filters.type);
@@ -251,7 +251,7 @@ export async function getTransactions(filters = {}) {
     results = results.filter(t => new Date(t.date) <= new Date(filters.endDate));
   }
   if (filters.categoryId) {
-    results = results.filter(t => t.categoryId === filters.categoryId);
+    results = results.filter(t => String(t.categoryId) === String(filters.categoryId));
   }
   if (filters.limit) {
     results = results.slice(0, filters.limit);

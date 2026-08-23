@@ -108,7 +108,7 @@ export async function renderTransactions() {
               </div>
             </div>
             ${group.transactions.map(tx => {
-              const cat = categories.find(c => c.id === tx.categoryId);
+              const cat = categories.find(c => String(c.id) === String(tx.categoryId));
               const isExpense = tx.type === 'expense' || tx.type === 'debt';
               return `
                 <div class="transaction-item" data-tx-id="${tx.id}">
