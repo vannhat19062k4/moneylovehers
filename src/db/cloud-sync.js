@@ -7,8 +7,8 @@ const CONFIG_KEY = 'money_love_hers_supabase_config';
 const DEVICE_ID_KEY = 'money_love_hers_device_id';
 
 // Read from .env file
-const ENV_URL = import.meta.env.VITE_SUPABASE_URL || '';
-const ENV_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const ENV_URL = import.meta.env.VITE_SUPABASE_URL || 'https://vctokdauyotbvjidkwho.supabase.co';
+const ENV_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjdG9rZGF1eW90YnZqaWRrd2hvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODczOTI0NzksImV4cCI6MjEwMjk2ODQ3OX0.j6tmEql-CHd_m8uJazfjghuyrbA3jot5K7yw5la8sHo';
 
 export let supabase = null;
 let syncEnabled = false;
