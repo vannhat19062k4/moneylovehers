@@ -43,6 +43,7 @@ export async function renderLogin() {
 export function setupLoginEvents() {
   document.getElementById('btn-google-login')?.addEventListener('click', async () => {
     try {
+      localStorage.setItem('needs_initial_sync', 'true');
       document.getElementById('btn-google-login').innerHTML = '<span class="loader" style="width:20px;height:20px;border:2px solid #ccc;border-top-color:#333;border-radius:50%;animation:spin 1s linear infinite;"></span>';
       const { error } = await signInWithGoogle();
       if (error) {

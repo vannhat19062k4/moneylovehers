@@ -32,16 +32,19 @@ async function initApp() {
         setTimeout(async () => {
           const session = await getSession();
           if (session) {
-            const freshData = await getAllData();
-            // If local DB is completely empty (new login), pull from cloud first!
-            if (freshData.wallets.length === 0 && freshData.categories.length === 0) {
+            const needsInitialSync = localStorage.getItem('needs_initial_sync') === 'true';
+            
+            if (needsInitialSync) {
+              // Fresh login: pull data from cloud to override local (empty) state
               const cloudData = await pullFromCloud();
               if (cloudData) {
-                await importData({ data: cloudData });
+                await importData({ data: cloudData }, true); // clearFirst = true
                 window.dispatchEvent(new CustomEvent('reload-page')); // Refresh UI
               }
+              localStorage.removeItem('needs_initial_sync');
             } else {
-              // Otherwise, we push our local data to cloud (upsert)
+              // Normal boot: push local data to cloud (upsert)
+              const freshData = await getAllData();
               await pushToCloud(freshData);
             }
           }
