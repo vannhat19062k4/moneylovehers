@@ -1,21 +1,44 @@
 import { getWallets, addWallet, deleteWallet, exportData, importData, resetAllData, loadSampleData, getAllData, restoreFromLocalBackup } from '../db/database.js';
-import { saveSupabaseConfig, getSupabaseConfig, clearSupabaseConfig, isSyncEnabled, testConnection, setupTables, pushToCloud, pullFromCloud, getLastSyncInfo, initSupabase } from '../db/cloud-sync.js';
+import { getSession, signOut, isSyncEnabled, pushToCloud, pullFromCloud, initSupabase } from '../db/cloud-sync.js';
 import { getLastBackupTime } from '../db/local-backup.js';
 import { formatFullCurrency, showToast } from '../utils.js';
+import router from '../router.js';
 
 export async function renderAccount() {
   const wallets = await getWallets();
-  const supabaseConfig = getSupabaseConfig();
-  const cloudConnected = isSyncEnabled();
+  const session = await getSession();
+  const cloudConnected = isSyncEnabled() && session;
   const lastBackup = getLastBackupTime();
 
   const lastBackupDisplay = lastBackup
     ? new Date(lastBackup).toLocaleString('vi-VN')
     : 'Chưa có';
 
+  const userEmail = session?.user?.email || '';
+  const userAvatar = session?.user?.user_metadata?.avatar_url || `https://ui-avatars.com/api/?name=${userEmail}&background=10B981&color=fff`;
+
   return `
     <div class="account-page animate-fade-in">
       <h1 style="font-size: 28px; font-weight: 800; margin-bottom: 24px;">Tài khoản</h1>
+
+      <!-- Profile Section -->
+      <div class="card" style="margin-bottom: 20px; display: flex; align-items: center; gap: 16px;">
+        ${session ? `
+          <img src="${userAvatar}" alt="Avatar" style="width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--accent-green);" />
+          <div style="flex: 1;">
+            <div style="font-weight: 700; font-size: 16px;">${userEmail.split('@')[0]}</div>
+            <div style="font-size: 13px; color: var(--text-tertiary);">${userEmail}</div>
+          </div>
+          <button class="btn btn-sm btn-ghost" id="btn-sign-out" style="color: var(--accent-red-light);">Đăng xuất</button>
+        ` : `
+          <div style="width: 56px; height: 56px; border-radius: 50%; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; font-size: 24px;">👤</div>
+          <div style="flex: 1;">
+            <div style="font-weight: 700; font-size: 16px;">Chưa đăng nhập</div>
+            <div style="font-size: 13px; color: var(--text-tertiary);">Đăng nhập để đồng bộ dữ liệu</div>
+          </div>
+          <button class="btn btn-sm btn-primary" id="btn-login-now">Đăng nhập</button>
+        `}
+      </div>
 
       <!-- Cloud Sync Status Banner -->
       <div class="card" style="background: ${cloudConnected ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))' : 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.05))'}; border-color: ${cloudConnected ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}; margin-bottom: 20px;">
@@ -23,15 +46,10 @@ export async function renderAccount() {
           <div style="font-size: 28px;">${cloudConnected ? '☁️' : '⚠️'}</div>
           <div style="flex: 1;">
             <div style="font-weight: 700; font-size: 15px; color: ${cloudConnected ? 'var(--accent-green-light)' : 'var(--accent-amber-light)'};">
-              ${cloudConnected ? 'Cloud Sync: Đang hoạt động' : 'Cloud Sync: Chưa thiết lập'}
+              ${cloudConnected ? 'Cloud Sync: Đang hoạt động' : 'Cloud Sync: Chưa hoạt động'}
             </div>
             <div style="font-size: 12px; color: var(--text-secondary); margin-top: 2px;">
-              ${cloudConnected ? 'Dữ liệu được đồng bộ lên cloud tự động' : 'Thiết lập để không bao giờ mất dữ liệu'}
-            </div>
-          </div>
-          <div style="text-align: right;">
-            <div id="sync-status-indicator" style="font-size: 11px; color: var(--text-tertiary);">
-              ${cloudConnected ? '✅ Online' : '⏸️ Offline'}
+              ${cloudConnected ? 'Dữ liệu được bảo vệ an toàn trên Cloud' : 'Đăng nhập để tự động sao lưu'}
             </div>
           </div>
         </div>
@@ -39,7 +57,7 @@ export async function renderAccount() {
           <div style="font-size: 12px; color: var(--text-tertiary);">
             📱 Backup local: ${lastBackupDisplay}
           </div>
-          ${cloudConnected ? `<button class="btn btn-sm btn-primary" id="sync-now-btn" style="font-size: 12px; padding: 4px 12px;">Đồng bộ ngay</button>` : `<button class="btn btn-sm btn-primary" id="setup-cloud-btn" style="font-size: 12px; padding: 4px 12px;">Thiết lập</button>`}
+          ${cloudConnected ? `<button class="btn btn-sm btn-primary" id="sync-now-btn" style="font-size: 12px; padding: 4px 12px;">Đồng bộ ngay</button>` : ''}
         </div>
       </div>
 
@@ -66,33 +84,20 @@ export async function renderAccount() {
       </div>
 
       <!-- Cloud Sync Settings -->
-      <div class="mt-2xl">
-        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">☁️ Cloud Sync (Supabase)</h2>
+      <div class="mt-2xl" style="${!cloudConnected ? 'display: none;' : ''}">
+        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">☁️ Tùy chọn Cloud Sync</h2>
         <div class="card" style="padding: 0;">
           <ul class="settings-list">
-            <li class="settings-item" id="setting-cloud-setup">
-              <div class="settings-item-icon" style="background: #3B82F622;">🔗</div>
-              <span class="settings-item-label">${cloudConnected ? 'Cấu hình lại Cloud' : 'Kết nối Supabase Cloud'}</span>
-              <span class="settings-item-value" style="color: ${cloudConnected ? 'var(--accent-green)' : 'var(--accent-amber)'};">${cloudConnected ? '✅' : '⚠️'}</span>
-              <span class="settings-item-arrow">›</span>
-            </li>
-            ${cloudConnected ? `
               <li class="settings-item" id="setting-sync-push">
                 <div class="settings-item-icon" style="background: #10B98122;">📤</div>
-                <span class="settings-item-label">Đẩy dữ liệu lên Cloud</span>
+                <span class="settings-item-label">Đẩy dữ liệu lên Cloud (Ghi đè)</span>
                 <span class="settings-item-arrow">›</span>
               </li>
               <li class="settings-item" id="setting-sync-pull">
                 <div class="settings-item-icon" style="background: #8B5CF622;">📥</div>
-                <span class="settings-item-label">Tải dữ liệu từ Cloud</span>
+                <span class="settings-item-label">Tải dữ liệu từ Cloud (Ghi đè)</span>
                 <span class="settings-item-arrow">›</span>
               </li>
-              <li class="settings-item" id="setting-cloud-disconnect">
-                <div class="settings-item-icon" style="background: #EF444422;">🔌</div>
-                <span class="settings-item-label" style="color: var(--accent-red-light);">Ngắt kết nối Cloud</span>
-                <span class="settings-item-arrow" style="color: var(--accent-red-light);">›</span>
-              </li>
-            ` : ''}
           </ul>
         </div>
       </div>
@@ -165,9 +170,17 @@ export function setupAccountEvents() {
   // Add wallet
   document.getElementById('add-wallet-btn')?.addEventListener('click', openAddWallet);
 
-  // Cloud setup
-  document.getElementById('setup-cloud-btn')?.addEventListener('click', openCloudSetup);
-  document.getElementById('setting-cloud-setup')?.addEventListener('click', openCloudSetup);
+  // Login/Sign Out
+  document.getElementById('btn-login-now')?.addEventListener('click', () => {
+    router.navigate('login');
+  });
+
+  document.getElementById('btn-sign-out')?.addEventListener('click', async () => {
+    if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+      await signOut();
+      router.navigate('login');
+    }
+  });
 
   // Sync now
   document.getElementById('sync-now-btn')?.addEventListener('click', async () => {
@@ -210,14 +223,7 @@ export function setupAccountEvents() {
     }
   });
 
-  // Disconnect cloud
-  document.getElementById('setting-cloud-disconnect')?.addEventListener('click', () => {
-    if (confirm('Ngắt kết nối Cloud? Dữ liệu trên Cloud sẽ KHÔNG bị xóa.')) {
-      clearSupabaseConfig();
-      showToast('Đã ngắt kết nối Cloud');
-      window.dispatchEvent(new CustomEvent('reload-page'));
-    }
-  });
+
 
   // Load sample data
   document.getElementById('setting-sample-data')?.addEventListener('click', async () => {
@@ -300,18 +306,6 @@ export function setupAccountEvents() {
   });
 }
 
-// ─── Cloud Setup Modal ───
-function openCloudSetup() {
-  const existingConfig = getSupabaseConfig();
-
-  const modal = document.createElement('div');
-  modal.id = 'cloud-setup-container';
-  modal.innerHTML = `
-    <div class="modal-overlay" id="cloud-overlay"></div>
-    <div class="modal" id="cloud-modal" style="max-height: 90vh; max-height: 90dvh;">
-      <div class="modal-handle"></div>
-      <div class="modal-header">
-        <button class="icon-btn" id="cloud-close">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
         <h2>☁️ Thiết lập Cloud Sync</h2>

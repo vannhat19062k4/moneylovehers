@@ -7,6 +7,8 @@ import { renderTransactions, setupTransactionEvents } from './pages/transactions
 import { openAddTransaction } from './pages/add-transaction.js';
 import { renderBudget, setupBudgetEvents } from './pages/budget.js';
 import { renderAccount, setupAccountEvents } from './pages/account.js';
+import { renderLogin, setupLoginEvents } from './pages/login.js';
+import { getSession } from './db/cloud-sync.js';
 
 // ─── App Initialization ───
 async function initApp() {
@@ -25,21 +27,25 @@ async function initApp() {
     saveToLocalStorage(data);
     console.log('💾 localStorage backup created');
 
-    // Auto-sync to cloud if enabled
-    if (isSyncEnabled()) {
-      setTimeout(async () => {
-        const freshData = await getAllData();
-        await pushToCloud(freshData);
-      }, 3000);
+      // Auto-sync to cloud if enabled
+      if (isSyncEnabled()) {
+        setTimeout(async () => {
+          const session = await getSession();
+          if (session) {
+            const freshData = await getAllData();
+            await pushToCloud(freshData);
+          }
+        }, 3000);
+      }
+    } catch (err) {
+      console.error('❌ Init error:', err);
     }
-  } catch (err) {
-    console.error('❌ Init error:', err);
-  }
 
   const pageContainer = document.getElementById('page-container');
   const bottomNav = document.getElementById('bottom-nav');
 
   // Register routes
+  router.register('login', renderLogin);
   router.register('dashboard', renderDashboard);
   router.register('transactions', renderTransactions);
   router.register('budget', renderBudget);
@@ -47,6 +53,7 @@ async function initApp() {
 
   // Page event setup map
   const pageEvents = {
+    login: setupLoginEvents,
     dashboard: setupDashboardEvents,
     transactions: setupTransactionEvents,
     budget: setupBudgetEvents,
@@ -63,20 +70,36 @@ async function initApp() {
     // Show/hide bottom nav
     if (pageName === 'add-transaction') {
       bottomNav.style.display = 'none';
+      pageContainer.style.paddingBottom = '0';
     } else {
-      bottomNav.style.display = '';
+      bottomNav.style.display = 'flex';
+      pageContainer.style.paddingBottom = '80px';
     }
 
-    // Setup page-specific events
-    setTimeout(() => {
-      if (pageEvents[pageName]) {
+    if (pageEvents[pageName]) {
+      setTimeout(() => {
         pageEvents[pageName]();
-      }
-    }, 200);
+      }, 50);
+    }
   };
 
   // Initialize router
   router.init(pageContainer);
+
+  // Auth Guard
+  const session = await getSession();
+  const skipLogin = localStorage.getItem('money_love_hers_skip_login');
+  
+  if (!session && !skipLogin) {
+    router.navigate('login');
+  } else {
+    // Manually trigger the route if hash is empty
+    if (!window.location.hash) {
+      router.navigate('dashboard');
+    } else {
+      router.handleRoute();
+    }
+  }
 
   // Bottom nav click handlers
   document.querySelectorAll('.nav-item').forEach(item => {
