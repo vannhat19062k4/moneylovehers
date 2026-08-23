@@ -3,8 +3,16 @@
 -- Chạy SQL này trong Supabase Dashboard > SQL Editor
 -- ============================================================
 
+-- 0. Xóa các bảng cũ (để tạo lại với cấu trúc mới chứa user_id và TEXT id)
+-- LƯU Ý: Dữ liệu local của bạn (trên trình duyệt) vẫn an toàn và sẽ được đồng bộ lên lại sau khi đăng nhập.
+DROP TABLE IF EXISTS sync_metadata CASCADE;
+DROP TABLE IF EXISTS budgets CASCADE;
+DROP TABLE IF EXISTS transactions CASCADE;
+DROP TABLE IF EXISTS categories CASCADE;
+DROP TABLE IF EXISTS wallets CASCADE;
+
 -- 1. Bảng ví (wallets)
-CREATE TABLE IF NOT EXISTS wallets (
+CREATE TABLE wallets (
   id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id),
   device_id TEXT,
@@ -18,7 +26,7 @@ CREATE TABLE IF NOT EXISTS wallets (
 );
 
 -- 2. Bảng danh mục (categories)
-CREATE TABLE IF NOT EXISTS categories (
+CREATE TABLE categories (
   id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id),
   device_id TEXT,
@@ -32,7 +40,7 @@ CREATE TABLE IF NOT EXISTS categories (
 );
 
 -- 3. Bảng giao dịch (transactions)
-CREATE TABLE IF NOT EXISTS transactions (
+CREATE TABLE transactions (
   id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id),
   device_id TEXT,
@@ -47,7 +55,7 @@ CREATE TABLE IF NOT EXISTS transactions (
 );
 
 -- 4. Bảng ngân sách (budgets)
-CREATE TABLE IF NOT EXISTS budgets (
+CREATE TABLE budgets (
   id TEXT PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id),
   device_id TEXT,
@@ -61,7 +69,7 @@ CREATE TABLE IF NOT EXISTS budgets (
 );
 
 -- 5. Bảng sync metadata
-CREATE TABLE IF NOT EXISTS sync_metadata (
+CREATE TABLE sync_metadata (
   user_id UUID REFERENCES auth.users(id) PRIMARY KEY,
   last_sync TIMESTAMPTZ DEFAULT NOW(),
   data_hash TEXT,
