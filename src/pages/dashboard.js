@@ -139,7 +139,7 @@ export async function renderDashboard() {
         </div>
         <div class="card stagger-children">
           ${recentTxs.length > 0 ? recentTxs.map(tx => {
-            const cat = categories.find(c => c.id === tx.categoryId);
+            const cat = categories.find(c => String(c.id) === String(tx.categoryId));
             const isExpense = tx.type === 'expense' || tx.type === 'debt';
             return `
               <div class="transaction-item">

@@ -91,7 +91,7 @@ export async function renderBudget() {
       <!-- Budget List -->
       <div class="mt-xl stagger-children">
         ${budgets.length > 0 ? budgets.map(budget => {
-          const cat = categories.find(c => c.id === budget.categoryId);
+          const cat = categories.find(c => String(c.id) === String(budget.categoryId));
           const spent = budget.spent || 0;
           const remaining = budget.amount - spent;
           const pct = budget.amount > 0 ? (spent / budget.amount) * 100 : 0;
@@ -251,7 +251,11 @@ async function openCreateBudget() {
       document.querySelectorAll('.budget-cat-option').forEach(b => b.classList.add('btn-secondary'));
       btn.classList.remove('btn-secondary');
       btn.classList.add('btn-primary');
-      selectedBudgetCatId = parseInt(btn.dataset.catId);
+      const catIdStr = btn.dataset.catId;
+      const category = categories.find(c => String(c.id) === catIdStr);
+      if (category) {
+        selectedBudgetCatId = category.id;
+      }
     });
   });
 

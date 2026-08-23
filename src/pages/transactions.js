@@ -158,7 +158,11 @@ export function setupTransactionEvents() {
   // Delete transaction events
   document.querySelectorAll('.delete-tx-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const txId = parseInt(e.currentTarget.getAttribute('data-id'));
+      let txId = e.currentTarget.getAttribute('data-id');
+      // If txId is numeric string and local dexie expects integer, this might be tricky.
+      // But we can check if it parses to integer completely.
+      if (/^\d+$/.test(txId)) txId = parseInt(txId);
+      
       if (confirm('Bạn có chắc chắn muốn xóa giao dịch này?')) {
         await deleteTransaction(txId);
         window.dispatchEvent(new CustomEvent('reload-page'));

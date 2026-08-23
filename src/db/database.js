@@ -375,9 +375,9 @@ export async function getTopSpending(year, month, limit = 5) {
 
   const spending = Object.entries(stats.expenseByCategory)
     .map(([catId, amount]) => {
-      const cat = categories.find(c => c.id === parseInt(catId));
+      const cat = categories.find(c => String(c.id) === String(catId));
       return {
-        categoryId: parseInt(catId),
+        categoryId: cat ? cat.id : catId,
         name: cat?.name || 'Khác',
         icon: cat?.icon || '📦',
         amount,
